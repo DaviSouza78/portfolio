@@ -1,278 +1,406 @@
-// ==========================================
-// 1. DADOS DOS CERTIFICADOS & MODAIS
-// ==========================================
 const certificadosData = [
     {
-        titulo: "SuperGeeks",
+        titulo: "Python para Dados",
         instituicao: "SuperGeeks",
-        ano: "2024", 
-        imagem: "Img/py_para_dados_certificado.png" // Garanta que esta imagem exista ou mude o nome
+        ano: "2024",
+        imagem: "Img/py_para_dados_certificado.png"
     },
     {
         titulo: "Começando com o Cisco Packet Tracer",
         instituicao: "Cisco Networking Academy",
-        ano: "2026", 
+        ano: "2026",
         imagem: "Img/certificadocisco.png"
     }
 ];
 
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const hasFinePointer = window.matchMedia("(pointer: fine)").matches;
+let previousFocus = null;
+let activeModal = null;
+
 const modalManager = {
     open(modalId) {
         const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Evita scroll do fundo
+        if (!modal) return;
+
+        if (activeModal && activeModal !== modal) {
+            this.close(activeModal.id, false);
         }
+
+        previousFocus = document.activeElement;
+        activeModal = modal;
+        modal.classList.add("active");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("modal-open");
+
+        requestAnimationFrame(() => {
+            modal.querySelector("[data-close-modal]")?.focus();
+        });
     },
-    close(modalId) {
+
+    close(modalId, restoreFocus = true) {
         const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.remove('active');
-            document.body.style.overflow = 'auto';
+        if (!modal) return;
+
+        modal.classList.remove("active");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("modal-open");
+        activeModal = null;
+
+        if (restoreFocus && previousFocus instanceof HTMLElement) {
+            previousFocus.focus();
         }
     }
 };
 
+window.modalManager = modalManager;
+
 const renderCertificadoModal = (src, title) => {
-    const imgElement = document.getElementById('img-certificado');
-    const captionElement = document.getElementById('legenda-certificado');
-    if (imgElement && captionElement) {
-        imgElement.src = src;
-        imgElement.alt = title;
-        captionElement.textContent = title;
-        modalManager.open('modal-certificado');
-    }
+    const image = document.getElementById("img-certificado");
+    const caption = document.getElementById("legenda-certificado");
+    if (!image || !caption) return;
+
+    image.hidden = false;
+    image.onerror = () => {
+        image.hidden = true;
+        caption.textContent = `${title} — imagem ainda não disponível nesta pasta`;
+    };
+    image.src = src;
+    image.alt = `Certificado: ${title}`;
+    caption.textContent = title;
+    modalManager.open("modal-certificado");
 };
 
 const initCertificados = () => {
-    const container = document.getElementById('certificados-grid');
+    const container = document.getElementById("certificados-grid");
     if (!container) return;
 
-    certificadosData.forEach(cert => {
-        const card = document.createElement('div');
-        card.className = 'project-card tilt-card gs-reveal'; 
-        
-        card.onclick = () => renderCertificadoModal(cert.imagem, cert.titulo);
-
+    certificadosData.forEach((certificado, index) => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "certificate-card";
+        card.setAttribute("aria-label", `Ver certificado ${certificado.titulo}`);
         card.innerHTML = `
-            <div class="card-inner">
-                <h4>${cert.titulo}</h4>
-                <p>${cert.instituicao} • ${cert.ano}</p>
-                <span class="view-more">Ver Certificado ➔</span>
-            </div>
+            <span class="certificate-index">${String(index + 1).padStart(2, "0")}</span>
+            <span class="certificate-copy">
+                <strong>${certificado.titulo}</strong>
+                <small>${certificado.instituicao} · ${certificado.ano}</small>
+            </span>
+            <span class="certificate-arrow" aria-hidden="true">↗</span>
         `;
+        card.addEventListener("click", () => renderCertificadoModal(certificado.imagem, certificado.titulo));
         container.appendChild(card);
     });
 };
 
+const getFocusableElements = modal => Array.from(
+    modal.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])')
+).filter(element => element.offsetParent !== null);
+
 const setupModalListeners = () => {
-    window.addEventListener('click', (event) => {
-        if (event.target.classList.contains('modal')) {
-            event.target.classList.remove('active');
-            document.body.style.overflow = 'auto';
+    document.addEventListener("click", event => {
+        const trigger = event.target.closest("[data-modal]");
+        if (trigger) {
+            modalManager.open(trigger.dataset.modal);
+            return;
+        }
+
+        const closeButton = event.target.closest("[data-close-modal]");
+        if (closeButton) {
+            const modal = closeButton.closest(".modal");
+            if (modal) modalManager.close(modal.id);
+            return;
+        }
+
+        if (event.target.classList.contains("modal")) {
+            modalManager.close(event.target.id);
         }
     });
 
-    window.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-            document.querySelectorAll('.modal.active').forEach(modal => {
-                modal.classList.remove('active');
-                document.body.style.overflow = 'auto';
-            });
+    document.addEventListener("keydown", event => {
+        if (!activeModal) return;
+
+        if (event.key === "Escape") {
+            modalManager.close(activeModal.id);
+            return;
+        }
+
+        if (event.key !== "Tab") return;
+        const focusable = getFocusableElements(activeModal);
+        if (!focusable.length) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
         }
     });
 };
 
-// ==========================================
-// 2. CURSOR CUSTOMIZADO
-// ==========================================
-const cursor = document.querySelector('.cursor');
-const follower = document.querySelector('.cursor-follower');
-let mouseX = 0, mouseY = 0, posX = 0, posY = 0;
+const initCursor = () => {
+    if (!hasFinePointer || prefersReducedMotion) return;
 
-document.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-    cursor.style.left = `${mouseX}px`;
-    cursor.style.top = `${mouseY}px`;
-});
+    const cursor = document.querySelector(".cursor");
+    const follower = document.querySelector(".cursor-follower");
+    if (!cursor || !follower) return;
 
-gsap.ticker.add(() => {
-    posX += (mouseX - posX) * 0.15;
-    posY += (mouseY - posY) * 0.15;
-    gsap.set(follower, { left: posX, top: posY });
-});
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let followerX = mouseX;
+    let followerY = mouseY;
 
-// Aumenta o cursor ao passar em áreas interativas
-const setupCursorHover = () => {
-    document.querySelectorAll('a, button, .tilt-card').forEach(el => {
-        el.addEventListener('mouseenter', () => {
-            gsap.to(follower, { scale: 1.5, backgroundColor: 'rgba(56, 189, 248, 0.2)', duration: 0.3 });
-        });
-        el.addEventListener('mouseleave', () => {
-            gsap.to(follower, { scale: 1, backgroundColor: 'transparent', duration: 0.3 });
-        });
+    document.addEventListener("mousemove", event => {
+        mouseX = event.clientX;
+        mouseY = event.clientY;
+        cursor.style.left = `${mouseX}px`;
+        cursor.style.top = `${mouseY}px`;
+    });
+
+    const renderCursor = () => {
+        followerX += (mouseX - followerX) * 0.14;
+        followerY += (mouseY - followerY) * 0.14;
+        follower.style.left = `${followerX}px`;
+        follower.style.top = `${followerY}px`;
+        requestAnimationFrame(renderCursor);
+    };
+    renderCursor();
+
+    document.addEventListener("pointerover", event => {
+        if (event.target.closest("a, button, .tilt-card")) {
+            follower.style.width = "54px";
+            follower.style.height = "54px";
+            follower.style.background = "rgba(34, 197, 94, 0.09)";
+            follower.style.borderColor = "rgba(74, 222, 128, 0.92)";
+        }
+    });
+
+    document.addEventListener("pointerout", event => {
+        if (event.target.closest("a, button, .tilt-card")) {
+            follower.style.width = "38px";
+            follower.style.height = "38px";
+            follower.style.background = "transparent";
+            follower.style.borderColor = "rgba(74, 222, 128, 0.68)";
+        }
     });
 };
-
-// ==========================================
-// 3. ANIMAÇÕES DE ROLAGEM COM GSAP E TILT
-// ==========================================
-gsap.registerPlugin(ScrollTrigger);
 
 const initAnimations = () => {
-    gsap.from(".hero-content > *", {
-        y: 50, opacity: 0, duration: 1, stagger: 0.2, ease: "power3.out", delay: 0.2
+    if (prefersReducedMotion || typeof window.gsap === "undefined") return;
+
+    if (window.ScrollTrigger) {
+        window.gsap.registerPlugin(window.ScrollTrigger);
+    }
+
+    window.gsap.from(".hero-copy > *", {
+        y: 36,
+        opacity: 0,
+        duration: 0.9,
+        stagger: 0.1,
+        ease: "power3.out",
+        delay: 0.15
     });
 
-    gsap.utils.toArray('.gs-reveal').forEach(function(elem) {
-        gsap.from(elem, {
+    window.gsap.from(".hero-visual", {
+        x: 45,
+        opacity: 0,
+        duration: 1.1,
+        ease: "power3.out",
+        delay: 0.3
+    });
+
+    if (!window.ScrollTrigger) return;
+
+    document.querySelectorAll(".gs-reveal").forEach(element => {
+        if (element.closest(".hero-section")) return;
+        window.gsap.from(element, {
             scrollTrigger: {
-                trigger: elem,
-                start: "top 85%",
-                toggleActions: "play none none reverse"
+                trigger: element,
+                start: "top 88%",
+                once: true
             },
-            y: 50, opacity: 0, duration: 1, ease: "power3.out"
+            y: 38,
+            opacity: 0,
+            duration: 0.85,
+            ease: "power3.out"
         });
     });
 };
 
 const initTiltCards = () => {
-    const tiltCards = document.querySelectorAll('.tilt-card');
-    tiltCards.forEach(card => {
-        card.addEventListener('mousemove', (e) => {
+    if (!hasFinePointer || prefersReducedMotion) return;
+
+    document.querySelectorAll(".tilt-card").forEach(card => {
+        card.addEventListener("pointermove", event => {
             const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            const rotateX = ((y - centerY) / centerY) * -10; 
-            const rotateY = ((x - centerX) / centerX) * 10;
-            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+            const x = (event.clientX - rect.left) / rect.width - 0.5;
+            const y = (event.clientY - rect.top) / rect.height - 0.5;
+            card.style.transform = `perspective(1200px) rotateX(${y * -3.5}deg) rotateY(${x * 4}deg) translateY(-3px)`;
         });
 
-        card.addEventListener('mouseleave', () => {
-            card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+        card.addEventListener("pointerleave", () => {
+            card.style.transform = "perspective(1200px) rotateX(0deg) rotateY(0deg) translateY(0)";
         });
     });
 };
 
-// ==========================================
-// 4. BACKGROUND 3D (THREE.JS) & TEMA
-// ==========================================
-const canvas = document.querySelector('#webgl-canvas');
-const scene = new THREE.Scene();
+let threeState = null;
 
-// Checa estado inicial do tema para as cores do 3D
-const savedTheme = localStorage.getItem('theme');
-const initialIsLight = savedTheme === 'light';
+const initThreeBackground = () => {
+    if (prefersReducedMotion || typeof window.THREE === "undefined") return;
 
-scene.fog = new THREE.FogExp2(initialIsLight ? 0xf1f5f9 : 0x0a0a0a, 0.002);
+    const canvas = document.getElementById("webgl-canvas");
+    if (!canvas) return;
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+    const isLight = document.body.classList.contains("light-theme");
+    const scene = new window.THREE.Scene();
+    scene.fog = new window.THREE.FogExp2(isLight ? 0xeef4f5 : 0x07111f, 0.025);
 
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
+    const camera = new window.THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.z = 14;
 
-const geometry = new THREE.IcosahedronGeometry(1, 0); 
-const material = new THREE.MeshBasicMaterial({ 
-    color: initialIsLight ? 0x0284c7 : 0x38bdf8, 
-    wireframe: true,
-    transparent: true,
-    opacity: 0.15
-});
+    const renderer = new window.THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.7));
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
-const group = new THREE.Group();
-scene.add(group);
-
-for(let i = 0; i < 100; i++) {
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40);
-    mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
-    const scale = Math.random() * 0.5 + 0.1;
-    mesh.scale.set(scale, scale, scale);
-    group.add(mesh);
-}
-
-camera.position.z = 10;
-
-// Interação Parallax
-let targetX = 0;
-let targetY = 0;
-const windowHalfX = window.innerWidth / 2;
-const windowHalfY = window.innerHeight / 2;
-
-document.addEventListener('mousemove', (event) => {
-    targetX = (event.clientX - windowHalfX) * 0.001;
-    targetY = (event.clientY - windowHalfY) * 0.001;
-});
-
-const clock = new THREE.Clock();
-
-function animate() {
-    requestAnimationFrame(animate);
-    group.rotation.y += 0.001;
-    group.rotation.x += 0.0005;
-
-    // Movimento do mouse
-    group.rotation.y += 0.05 * (targetX - group.rotation.y);
-    group.rotation.x += 0.05 * (targetY - group.rotation.x);
-
-    group.children.forEach(mesh => {
-        mesh.rotation.x += 0.002;
-        mesh.rotation.y += 0.002;
+    const geometry = new window.THREE.IcosahedronGeometry(0.32, 0);
+    const material = new window.THREE.MeshBasicMaterial({
+        color: isLight ? 0x0e8a42 : 0x22c55e,
+        wireframe: true,
+        transparent: true,
+        opacity: isLight ? 0.07 : 0.1
     });
 
-    renderer.render(scene, camera);
-}
-animate();
+    const group = new window.THREE.Group();
+    scene.add(group);
 
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-// Lógica de Alternância de Tema
-const initDarkMode = () => {
-    const btn = document.getElementById('dark-mode-toggle');
-    if (!btn) return;
-
-    if (initialIsLight) {
-        document.body.classList.add('light-theme');
+    for (let index = 0; index < 54; index += 1) {
+        const mesh = new window.THREE.Mesh(geometry, material);
+        mesh.position.set(
+            (Math.random() - 0.5) * 30,
+            (Math.random() - 0.5) * 22,
+            (Math.random() - 0.5) * 18
+        );
+        const scale = Math.random() * 0.72 + 0.25;
+        mesh.scale.setScalar(scale);
+        mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+        group.add(mesh);
     }
 
-    btn.addEventListener('click', () => {
-        document.body.classList.toggle('light-theme');
-        const isLight = document.body.classList.contains('light-theme');
-        
-        localStorage.setItem('theme', isLight ? 'light' : 'dark');
-        
-        // Suaviza a mudança de cor no Three.js
-        gsap.to(scene.fog.color, {
-            r: new THREE.Color(isLight ? 0xf1f5f9 : 0x0a0a0a).r,
-            g: new THREE.Color(isLight ? 0xf1f5f9 : 0x0a0a0a).g,
-            b: new THREE.Color(isLight ? 0xf1f5f9 : 0x0a0a0a).b,
-            duration: 0.5
+    let pointerX = 0;
+    let pointerY = 0;
+    document.addEventListener("pointermove", event => {
+        pointerX = (event.clientX / window.innerWidth - 0.5) * 0.22;
+        pointerY = (event.clientY / window.innerHeight - 0.5) * 0.14;
+    });
+
+    const animate = () => {
+        group.rotation.y += (pointerX - group.rotation.y) * 0.018;
+        group.rotation.x += (-pointerY - group.rotation.x) * 0.018;
+        group.rotation.z += 0.00035;
+        group.children.forEach((mesh, index) => {
+            mesh.rotation.x += 0.0007 + (index % 4) * 0.00015;
+            mesh.rotation.y += 0.001;
         });
-        gsap.to(material.color, {
-            r: new THREE.Color(isLight ? 0x0284c7 : 0x38bdf8).r,
-            g: new THREE.Color(isLight ? 0x0284c7 : 0x38bdf8).g,
-            b: new THREE.Color(isLight ? 0x0284c7 : 0x38bdf8).b,
-            duration: 0.5
-        });
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+    };
+    animate();
+
+    window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    threeState = { scene, material };
+};
+
+const applyTheme = theme => {
+    const isLight = theme === "light";
+    const toggle = document.getElementById("dark-mode-toggle");
+
+    document.body.classList.toggle("light-theme", isLight);
+    toggle?.setAttribute("aria-pressed", String(isLight));
+    toggle?.setAttribute("aria-label", isLight ? "Ativar tema escuro" : "Ativar tema claro");
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", isLight ? "#eef4f5" : "#0f172a");
+
+    if (!threeState) return;
+    const targetFog = new window.THREE.Color(isLight ? 0xeef4f5 : 0x07111f);
+    const targetMaterial = new window.THREE.Color(isLight ? 0x0e8a42 : 0x22c55e);
+
+    if (typeof window.gsap !== "undefined") {
+        window.gsap.to(threeState.scene.fog.color, { r: targetFog.r, g: targetFog.g, b: targetFog.b, duration: 0.45 });
+        window.gsap.to(threeState.material.color, { r: targetMaterial.r, g: targetMaterial.g, b: targetMaterial.b, duration: 0.45 });
+        window.gsap.to(threeState.material, { opacity: isLight ? 0.07 : 0.1, duration: 0.45 });
+    } else {
+        threeState.scene.fog.color.copy(targetFog);
+        threeState.material.color.copy(targetMaterial);
+        threeState.material.opacity = isLight ? 0.07 : 0.1;
+    }
+};
+
+const initTheme = () => {
+    const toggle = document.getElementById("dark-mode-toggle");
+    const savedTheme = localStorage.getItem("theme") === "light" ? "light" : "dark";
+    applyTheme(savedTheme);
+
+    toggle?.addEventListener("click", () => {
+        const nextTheme = document.body.classList.contains("light-theme") ? "dark" : "light";
+        localStorage.setItem("theme", nextTheme);
+        applyTheme(nextTheme);
     });
 };
 
-// ==========================================
-// INICIALIZAÇÃO
-// ==========================================
-document.addEventListener('DOMContentLoaded', () => {
-    initCertificados();      // Cria as tags de certificado
-    setupModalListeners();   // Habilita clicar fora e Esc para modais
-    initAnimations();        // Roda o GSAP ScrollTrigger
-    initTiltCards();         // Adiciona efeito 3D nos cards
-    initDarkMode();          // Adiciona lógica do botão de tema
-    setTimeout(setupCursorHover, 500); // Aguarda criação do DOM para o cursor
+const initScrollUI = () => {
+    const header = document.querySelector(".site-header");
+    const progress = document.querySelector(".scroll-progress span");
+    const navigationLinks = Array.from(document.querySelectorAll(".site-nav a[data-section]"));
+    let ticking = false;
+
+    const updateScroll = () => {
+        const scrollTop = window.scrollY;
+        const scrollRange = document.documentElement.scrollHeight - window.innerHeight;
+        const ratio = scrollRange > 0 ? scrollTop / scrollRange : 0;
+        header?.classList.toggle("scrolled", scrollTop > 24);
+        if (progress) progress.style.width = `${Math.min(ratio * 100, 100)}%`;
+        ticking = false;
+    };
+
+    window.addEventListener("scroll", () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(updateScroll);
+    }, { passive: true });
+    updateScroll();
+
+    if (!("IntersectionObserver" in window)) return;
+    const observedSections = navigationLinks
+        .map(link => document.getElementById(link.dataset.section))
+        .filter(Boolean);
+
+    const sectionObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            navigationLinks.forEach(link => {
+                link.classList.toggle("active", link.dataset.section === entry.target.id);
+            });
+        });
+    }, { rootMargin: "-25% 0px -65%", threshold: 0 });
+
+    observedSections.forEach(section => sectionObserver.observe(section));
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+    initCertificados();
+    setupModalListeners();
+    initTheme();
+    initCursor();
+    initScrollUI();
+    initAnimations();
+    initTiltCards();
+    initThreeBackground();
 });

@@ -18,11 +18,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=certs-1">
+    <link rel="stylesheet" href="style.css?v=experience-2">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
-    <script src="script.js?v=certs-1" defer></script>
+    <script src="script.js?v=experience-2" defer></script>
 </head>
 <body>
     <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -44,6 +44,10 @@
             </nav>
             <div class="nav-actions">
                 <a class="nav-contact" href="mailto:davisouza4404@gmail.com">Vamos conversar</a>
+                <div class="language-switcher" role="group" aria-label="Selecionar idioma">
+                    <button class="language-option active" type="button" data-language="pt" aria-pressed="true">PT</button>
+                    <button class="language-option" type="button" data-language="en" aria-pressed="false">EN</button>
+                </div>
                 <button id="dark-mode-toggle" class="theme-toggle" type="button" aria-label="Alternar tema" aria-pressed="false">
                     <span class="theme-icon theme-icon-dark" aria-hidden="true">◐</span>
                     <span class="theme-icon theme-icon-light" aria-hidden="true">☀</span>
@@ -183,6 +187,14 @@
     <footer class="site-footer"><div class="container footer-inner"><a class="brand footer-brand" href="#inicio" aria-label="Voltar ao início"><span class="brand-mark">DS</span></a><p>Projetado e desenvolvido por Davi Souza · 2026</p><a href="#inicio">Voltar ao topo <span>↑</span></a></div></footer>
 
     <div id="modal-certificado" class="modal" role="dialog" aria-modal="true" aria-labelledby="legenda-certificado" aria-hidden="true"><button class="modal-close" type="button" data-close-modal aria-label="Fechar certificado">×</button><div class="certificate-viewer"><img class="modal-img" id="img-certificado" alt="Certificado"><div class="certificate-viewer-footer"><div id="legenda-certificado" class="modal-caption"></div><a id="link-certificado" class="certificate-pdf-link" target="_blank" rel="noopener noreferrer" hidden>Abrir PDF <span aria-hidden="true">↗</span></a></div></div></div>
+
+    <div id="image-viewer" class="image-viewer" role="dialog" aria-modal="true" aria-labelledby="image-viewer-caption" aria-hidden="true">
+        <button id="image-viewer-close" class="image-viewer-close" type="button" aria-label="Fechar imagem ampliada">×</button>
+        <div class="image-viewer-content">
+            <img id="image-viewer-image" alt="">
+            <p id="image-viewer-caption">Visualização ampliada</p>
+        </div>
+    </div>
 
     <div id="modal-projeto" class="modal" role="dialog" aria-modal="true" aria-labelledby="title-senaihero" aria-hidden="true"><button class="modal-close" type="button" data-close-modal aria-label="Fechar detalhes do SenaiHERO">×</button><div class="modal-shell"><header class="modal-header"><div><p class="modal-kicker">PROJETO 03 · JOGO WEB</p><h2 id="title-senaihero">SenaiHERO</h2></div><span class="modal-year">2026</span></header><div class="modal-body"><div class="modal-copy"><p class="modal-lead">Uma plataforma web de jogo de ritmo criada para uma apresentação em sala de aula.</p><p>O projeto simula um jogo musical com trilhas e dificuldades variadas, combinando interação, feedback visual e desempenho no navegador.</p><div class="modal-stack"><span>HTML5</span><span>CSS3</span><span>JavaScript</span></div></div><div class="post-gallery"><img src="Img/senaihero/telainicial.png" loading="lazy" alt="Tela inicial do SenaiHERO"><img src="Img/senaihero/dificuldade.png" loading="lazy" alt="Seleção de dificuldade do SenaiHERO"><img src="Img/senaihero/gameplay.png" loading="lazy" alt="Gameplay do SenaiHERO"><img src="Img/senaihero/winscreen.png" loading="lazy" alt="Tela de vitória do SenaiHERO"><img src="Img/senaihero/fimdegame.png" loading="lazy" alt="Fim de jogo do SenaiHERO"><img src="Img/senaihero/config.png" loading="lazy" alt="Configurações do SenaiHERO"></div></div></div></div>
 

@@ -141,92 +141,70 @@ const setupModalListeners = () => {
     });
 };
 
-const initCursor = () => {
-    if (!hasFinePointer || prefersReducedMotion) return;
+const initNativeAnimations = () => {
+    document.body.classList.add("native-motion");
+    const revealElements = Array.from(document.querySelectorAll(".gs-reveal"));
+    revealElements.forEach(element => element.classList.add("native-reveal"));
 
-    const cursor = document.querySelector(".cursor");
-    const follower = document.querySelector(".cursor-follower");
-    if (!cursor || !follower) return;
+    if (!("IntersectionObserver" in window)) {
+        revealElements.forEach(element => element.classList.add("native-visible"));
+        return;
+    }
 
-    let mouseX = window.innerWidth / 2;
-    let mouseY = window.innerHeight / 2;
-    let followerX = mouseX;
-    let followerY = mouseY;
+    const revealObserver = new IntersectionObserver(entries => {
+        const visibleEntries = entries.filter(entry => entry.isIntersecting);
+        visibleEntries.forEach((entry, index) => {
+            entry.target.style.transitionDelay = `${index * 80}ms`;
+            entry.target.classList.add("native-visible");
+            revealObserver.unobserve(entry.target);
+        });
+    }, { threshold: 0.08, rootMargin: "0px 0px -7%" });
 
-    document.addEventListener("mousemove", event => {
-        mouseX = event.clientX;
-        mouseY = event.clientY;
-        cursor.style.left = `${mouseX}px`;
-        cursor.style.top = `${mouseY}px`;
-    });
-
-    const renderCursor = () => {
-        followerX += (mouseX - followerX) * 0.14;
-        followerY += (mouseY - followerY) * 0.14;
-        follower.style.left = `${followerX}px`;
-        follower.style.top = `${followerY}px`;
-        requestAnimationFrame(renderCursor);
-    };
-    renderCursor();
-
-    document.addEventListener("pointerover", event => {
-        if (event.target.closest("a, button, .tilt-card")) {
-            follower.style.width = "54px";
-            follower.style.height = "54px";
-            follower.style.background = "rgba(34, 197, 94, 0.09)";
-            follower.style.borderColor = "rgba(74, 222, 128, 0.92)";
-        }
-    });
-
-    document.addEventListener("pointerout", event => {
-        if (event.target.closest("a, button, .tilt-card")) {
-            follower.style.width = "38px";
-            follower.style.height = "38px";
-            follower.style.background = "transparent";
-            follower.style.borderColor = "rgba(74, 222, 128, 0.68)";
-        }
-    });
+    revealElements.forEach(element => revealObserver.observe(element));
 };
 
 const initAnimations = () => {
-    if (prefersReducedMotion || typeof window.gsap === "undefined") return;
+    if (prefersReducedMotion) return;
+    if (typeof window.gsap === "undefined") {
+        initNativeAnimations();
+        return;
+    }
 
     if (window.ScrollTrigger) {
         window.gsap.registerPlugin(window.ScrollTrigger);
     }
 
-    window.gsap.from(".hero-copy > *", {
-        y: 36,
-        opacity: 0,
-        duration: 0.9,
-        stagger: 0.1,
-        ease: "power3.out",
-        delay: 0.15
-    });
-
-    window.gsap.from(".hero-visual", {
-        x: 45,
-        opacity: 0,
-        duration: 1.1,
-        ease: "power3.out",
-        delay: 0.3
-    });
+    const heroTimeline = window.gsap.timeline({ defaults: { ease: "power4.out" } });
+    heroTimeline
+        .from(".site-header", { y: -24, autoAlpha: 0, duration: 0.85 })
+        .from(".hero-copy > *", { y: 28, autoAlpha: 0, duration: 1.05, stagger: 0.09 }, "-=0.48")
+        .from(".hero-visual", { x: 34, scale: 0.97, autoAlpha: 0, duration: 1.25 }, "-=0.9")
+        .from(".hero-metrics .metric", { y: 18, autoAlpha: 0, duration: 0.75, stagger: 0.07 }, "-=0.72")
+        .from(".tech-marquee", { y: 14, autoAlpha: 0, duration: 0.7 }, "-=0.42");
 
     if (!window.ScrollTrigger) return;
 
-    document.querySelectorAll(".gs-reveal").forEach(element => {
-        if (element.closest(".hero-section")) return;
-        window.gsap.from(element, {
-            scrollTrigger: {
-                trigger: element,
-                start: "top 88%",
-                once: true
-            },
-            y: 38,
-            opacity: 0,
-            duration: 0.85,
-            ease: "power3.out"
-        });
+    window.ScrollTrigger.batch(".gs-reveal", {
+        start: "top 90%",
+        once: true,
+        interval: 0.12,
+        batchMax: 4,
+        onEnter: batch => window.gsap.fromTo(batch,
+            { y: 30, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, duration: 1.05, stagger: 0.1, ease: "power4.out", overwrite: true }
+        )
+    });
+
+    window.gsap.to(".hero-visual", {
+        yPercent: 7,
+        ease: "none",
+        scrollTrigger: { trigger: ".hero-section", start: "top top", end: "bottom top", scrub: 1.2 }
+    });
+
+    window.gsap.fromTo(".contact-glow", { scale: 0.9 }, {
+        scale: 1.18,
+        ease: "none",
+        scrollTrigger: { trigger: ".contact-section", start: "top bottom", end: "bottom top", scrub: 1.4 }
     });
 };
 
@@ -398,7 +376,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initCertificados();
     setupModalListeners();
     initTheme();
-    initCursor();
     initScrollUI();
     initAnimations();
     initTiltCards();

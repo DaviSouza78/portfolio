@@ -10,6 +10,41 @@ const certificadosData = [
         instituicao: "Cisco Networking Academy",
         ano: "2026",
         imagem: "Img/certificadocisco.png"
+    },
+    {
+        titulo: "Linux Unhatched",
+        instituicao: "Cisco Networking Academy · NDG",
+        ano: "2026",
+        imagem: "Img/certificados/linux-unhatched.png",
+        arquivo: "Img/certificados/linux-unhatched.pdf"
+    },
+    {
+        titulo: "Introduction to Modern AI",
+        instituicao: "Cisco Networking Academy",
+        ano: "2026",
+        imagem: "Img/certificados/modern-ai.png",
+        arquivo: "Img/certificados/modern-ai.pdf"
+    },
+    {
+        titulo: "Data Analytics Essentials",
+        instituicao: "Cisco Networking Academy",
+        ano: "2026",
+        imagem: "Img/certificados/data-analytics.png",
+        arquivo: "Img/certificados/data-analytics.pdf"
+    },
+    {
+        titulo: "AWS Academy Cloud Foundations",
+        instituicao: "AWS Academy",
+        ano: "2026",
+        imagem: "Img/certificados/aws-cloud-foundations.png",
+        arquivo: "Img/certificados/aws-cloud-foundations.pdf"
+    },
+    {
+        titulo: "Networking Basics",
+        instituicao: "Cisco Networking Academy",
+        ano: "2026",
+        imagem: "Img/certificados/networking-basics.png",
+        arquivo: "Img/certificados/networking-basics.pdf"
     }
 ];
 
@@ -55,10 +90,11 @@ const modalManager = {
 
 window.modalManager = modalManager;
 
-const renderCertificadoModal = (src, title) => {
+const renderCertificadoModal = (src, title, pdfFile = "") => {
     const image = document.getElementById("img-certificado");
     const caption = document.getElementById("legenda-certificado");
-    if (!image || !caption) return;
+    const pdfLink = document.getElementById("link-certificado");
+    if (!image || !caption || !pdfLink) return;
 
     image.hidden = false;
     image.onerror = () => {
@@ -68,6 +104,14 @@ const renderCertificadoModal = (src, title) => {
     image.src = src;
     image.alt = `Certificado: ${title}`;
     caption.textContent = title;
+    pdfLink.hidden = !pdfFile;
+    if (pdfFile) {
+        pdfLink.href = pdfFile;
+        pdfLink.setAttribute("aria-label", `Abrir o certificado ${title} em PDF`);
+    } else {
+        pdfLink.removeAttribute("href");
+        pdfLink.removeAttribute("aria-label");
+    }
     modalManager.open("modal-certificado");
 };
 
@@ -88,7 +132,7 @@ const initCertificados = () => {
             </span>
             <span class="certificate-arrow" aria-hidden="true">↗</span>
         `;
-        card.addEventListener("click", () => renderCertificadoModal(certificado.imagem, certificado.titulo));
+        card.addEventListener("click", () => renderCertificadoModal(certificado.imagem, certificado.titulo, certificado.arquivo));
         container.appendChild(card);
     });
 };

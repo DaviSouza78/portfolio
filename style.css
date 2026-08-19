@@ -341,6 +341,10 @@ body.light-theme .projects-section { background: rgba(255,255,255,.42); }
 .certificate-viewer { display: flex; flex-direction: column; align-items: center; gap: 18px; width: min(100%, 1100px); margin: auto; }
 .modal-img { max-width: 100%; max-height: calc(100vh - 150px); border: 1px solid rgba(255,255,255,.15); border-radius: 18px; box-shadow: 0 32px 80px rgba(0,0,0,.5); }
 .modal-caption { color: #fff; font: 600 14px "Manrope", sans-serif; text-align: center; }
+.certificate-viewer-footer { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 16px; }
+.certificate-pdf-link { display: inline-flex; align-items: center; gap: 9px; padding: 9px 14px; border: 1px solid rgba(74,222,128,.45); border-radius: 999px; color: var(--green-bright); background: rgba(34,197,94,.08); font: 600 9px "JetBrains Mono", monospace; letter-spacing: .08em; text-decoration: none; text-transform: uppercase; transition: color .25s, background .25s, transform .25s var(--ease); }
+.certificate-pdf-link:hover { color: #04110a; background: var(--green-bright); transform: translateY(-2px); }
+.certificate-pdf-link[hidden] { display: none; }
 .modal-shell::-webkit-scrollbar { width: 8px; }
 .modal-shell::-webkit-scrollbar-track { background: rgba(255,255,255,.03); }
 .modal-shell::-webkit-scrollbar-thumb { border-radius: 8px; background: rgba(74,222,128,.3); }

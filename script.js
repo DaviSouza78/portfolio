@@ -262,6 +262,21 @@ const refreshTranslations = (root = document.body) => {
     translateAttributes(root);
 };
 
+const syncResumeDownloads = () => {
+    const isEnglish = currentLanguage === "en";
+    const resumePath = isEnglish
+        ? "output/pdf/Curriculo-Davi-Souza-English.pdf"
+        : "Img/Curriculo-Davi-Souza.pdf";
+    const downloadName = isEnglish
+        ? "Davi_Souza_Resume.pdf"
+        : "Curriculo_Davi_Souza.pdf";
+
+    document.querySelectorAll("[data-cv-download]").forEach(link => {
+        link.setAttribute("href", resumePath);
+        link.setAttribute("download", downloadName);
+    });
+};
+
 const applyLanguage = language => {
     currentLanguage = language === "en" ? "en" : "pt";
     document.documentElement.lang = currentLanguage === "en" ? "en" : "pt-BR";
@@ -293,6 +308,8 @@ const applyLanguage = language => {
         button.classList.toggle("active", isActive);
         button.setAttribute("aria-pressed", String(isActive));
     });
+
+    syncResumeDownloads();
 
     const viewerCaption = document.getElementById("image-viewer-caption");
     if (viewerCaption?.dataset.source) viewerCaption.textContent = translatePhrase(viewerCaption.dataset.source);
